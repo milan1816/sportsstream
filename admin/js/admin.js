@@ -204,13 +204,21 @@
         }
         showToast('Fetching latest fixtures from API...', false, 10000);
 
-        DataStore.refreshFromAPI(function(err, data) {
+        DataStore.refreshFromAPI(function(err, result) {
             if (refreshBtn) {
                 refreshBtn.disabled = false;
                 refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Refresh from API';
             }
-            var count = data ? data.length : 0;
-            showToast('Updated! ' + count + ' matches loaded.', false, 3000);
+            if (result) {
+                var label = result.source === 'api' ? 'Live API' : 'Fallback schedule';
+                var msg = 'Loaded ' + result.count + ' matches from ' + label;
+                if (result.source === 'fallback' && result.reason) {
+                    msg += ' (' + result.reason + ')';
+                }
+                showToast(msg, false, 4000);
+            } else {
+                showToast('Update complete.', false, 2000);
+            }
             renderEditors();
         });
     }

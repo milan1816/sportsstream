@@ -1,8 +1,8 @@
 /* ============================================================
-   DATA.JS – Live match data from API-Football
+   DATA.JS – Live match data from World Cup API
    Features:
-     - Fetches real World Cup 2026 fixtures from API-Football
-     - Uses Netlify function when deployed, CORS proxy when local
+     - Fetches real World Cup 2026 fixtures from api.worldcupapi.com
+     - Uses Netlify function when deployed, direct API when possible
      - Auto-detects live/upcoming/finished based on viewer's clock
      - Shows all times in viewer's LOCAL timezone
      - Caches results in localStorage (12 hours)
@@ -12,12 +12,9 @@
 const DataStore = (function() {
     'use strict';
 
-    // ---- API-FOOTBALL KEY ----
-    var API_KEY = '23ede1d64a5ae30a2ae3aecba72c2a43';
-    var API_HOST = 'v3.football.api-sports.io';
-
-    var LEAGUE_ID = 1;  // FIFA World Cup
-    var SEASON = 2026;
+    // World Cup API
+    var API_KEY = 'BPvmwmkL89duI3tP';
+    var API_HOST = 'api.worldcupapi.com';
 
     // Storage
     var CACHE_KEY = 'worldcup_cache';
@@ -30,11 +27,12 @@ const DataStore = (function() {
     // API ENDPOINTS
     // ============================================================
     var NETLIFY_FN_URL = '/.netlify/functions/fetch-fixtures';
-    var DIRECT_API_URL = 'https://' + API_HOST + '/fixtures?league=' + LEAGUE_ID + '&season=' + SEASON;
+    var DIRECT_API_URL = 'https://' + API_HOST + '/fixtures?key=' + API_KEY;
 
+    // CORS proxies (fallback when Netlify function unavailable)
     var CORS_PROXIES = [
         'https://corsproxy.io/?url=',
-        'https://api.allorigins.win/raw?url=',
+        'https://api.allorigins.win/raw?url='
     ];
 
     var IS_NETLIFY = (typeof window !== 'undefined' && window.location && window.location.hostname && window.location.hostname !== '' && window.location.protocol !== 'file:');
@@ -57,7 +55,12 @@ const DataStore = (function() {
         'Brazil': '🇧🇷', 'Argentina': '🇦🇷', 'France': '🇫🇷', 'Germany': '🇩🇪',
         'England': '🏴󠁧󠁢󠁥󠁮󠁧󠁿', 'Portugal': '🇵🇹', 'Netherlands': '🇳🇱', 'Spain': '🇪🇸',
         'Italy': '🇮🇹', 'Croatia': '🇭🇷', 'Belgium': '🇧🇪', 'Morocco': '🇲🇦',
-        'Uruguay': '🇺🇾', 'South Korea': '🇰🇷', 'Japan': '🇯🇵', 'Senegal': '🇸🇳'
+        'Uruguay': '🇺🇾', 'South Korea': '🇰🇷', 'Japan': '🇯🇵', 'Senegal': '🇸🇳',
+        'USA': '🇺🇸', 'Mexico': '🇲🇽', 'Canada': '🇨🇦', 'Ecuador': '🇪🇨',
+        'Qatar': '🇶🇦', 'Saudi Arabia': '🇸🇦', 'Iran': '🇮🇷', 'Tunisia': '🇹🇳',
+        'Australia': '🇦🇺', 'Denmark': '🇩🇰', 'Switzerland': '🇨🇭', 'Cameroon': '🇨🇲',
+        'Serbia': '🇷🇸', 'Poland': '🇵🇱', 'Senegal': '🇸🇳', 'Ghana': '🇬🇭',
+        'South Korea': '🇰🇷', 'Wales': '🏴󠁧󠁢󠁷󠁬󠁳󠁿', 'Uruguay': '🇺🇾'
     };
 
     // ============================================================
@@ -98,17 +101,19 @@ const DataStore = (function() {
         return new Promise(function(resolve, reject) {
             var attempts = [];
 
+            // On Netlify: use serverless function (bypasses CORS)
             if (IS_NETLIFY) {
                 attempts.push({ url: NETLIFY_FN_URL, headers: {} });
             }
 
+            // Direct API call (works if API allows CORS)
+            attempts.push({ url: DIRECT_API_URL, headers: {} });
+
+            // CORS proxy fallbacks
             CORS_PROXIES.forEach(function(proxy) {
                 attempts.push({
                     url: proxy + encodeURIComponent(DIRECT_API_URL),
-                    headers: {
-                        'x-apisports-key': API_KEY,
-                        'x-rapidapi-host': API_HOST
-                    }
+                    headers: {}
                 });
             });
 
@@ -119,20 +124,25 @@ const DataStore = (function() {
                 }
 
                 var attempt = attempts[index];
+                console.log('Trying fetch method ' + (index + 1) + ': ' + attempt.url.substring(0, 80) + '...');
 
                 fetch(attempt.url, { method: 'GET', headers: attempt.headers })
                     .then(function(r) {
-                        if (!r.ok) throw new Error('Status ' + r.status);
+                        if (!r.ok) throw new Error('HTTP ' + r.status);
                         return r.json();
                     })
                     .then(function(data) {
-                        if (data && data.response && data.response.length > 0) {
-                            resolve(data.response);
+                        var fixtures = extractFixtures(data);
+                        if (fixtures && fixtures.length > 0) {
+                            console.log('Success! Got ' + fixtures.length + ' fixtures');
+                            resolve(fixtures);
                         } else {
+                            console.warn('Method returned empty, trying next...');
                             tryNext(index + 1);
                         }
                     })
-                    .catch(function() {
+                    .catch(function(err) {
+                        console.warn('Method failed: ' + err.message);
                         tryNext(index + 1);
                     });
             };
@@ -141,24 +151,79 @@ const DataStore = (function() {
         });
     }
 
+    // Extract fixtures from various API response formats
+    function extractFixtures(data) {
+        if (!data) return [];
+
+        // Direct array
+        if (Array.isArray(data)) return data;
+
+        // Nested in data property
+        if (data.data && Array.isArray(data.data)) return data.data;
+        if (data.fixtures && Array.isArray(data.fixtures)) return data.fixtures;
+        if (data.response && Array.isArray(data.response)) return data.response;
+        if (data.matches && Array.isArray(data.matches)) return data.matches;
+
+        // Try to find an array in any top-level property
+        var keys = Object.keys(data);
+        for (var i = 0; i < keys.length; i++) {
+            if (Array.isArray(data[keys[i]])) return data[keys[i]];
+        }
+
+        return [];
+    }
+
     // ============================================================
-    // PARSE API FIXTURES
+    // PARSE FIXTURES (handles multiple API formats)
     // ============================================================
     function parseFixture(fixture) {
-        var homeTeam = fixture.teams ? fixture.teams.home.name : fixture.team1;
-        var awayTeam = fixture.teams ? fixture.teams.away.name : fixture.team2;
-        var homeFlag = fixture.teams ? fixture.teams.home.logo : fixture.team1Flag;
-        var awayFlag = fixture.teams ? fixture.teams.away.logo : fixture.team2Flag;
-        var matchDate = fixture.fixture ? new Date(fixture.fixture.date) : new Date(fixture.date || fixture.startDate);
-        var scoreHome = fixture.goals ? fixture.goals.home : null;
-        var scoreAway = fixture.goals ? fixture.goals.away : null;
+        // Format 1: World Cup API format (api.worldcupapi.com)
+        // { homeTeam: { name: 'Brazil' }, awayTeam: { name: 'Argentina' }, matchDate: '...' }
+        // Format 2: API-Football format
+        // { teams: { home: { name: 'Brazil' } }, fixture: { date: '...' } }
+        // Format 3: Simple fallback format
+        // { team1: 'Brazil', team2: 'Argentina', date: '...' }
+
+        var homeTeam, awayTeam, homeFlag, awayFlag, matchDate, scoreHome, scoreAway, id;
+
+        if (fixture.homeTeam && fixture.homeTeam.name) {
+            // World Cup API format
+            homeTeam = fixture.homeTeam.name;
+            awayTeam = fixture.awayTeam.name;
+            homeFlag = fixture.homeTeam.logo || COUNTRY_FLAGS[homeTeam] || '🏳️';
+            awayFlag = fixture.awayTeam.logo || COUNTRY_FLAGS[awayTeam] || '🏳️';
+            matchDate = new Date(fixture.matchDate || fixture.date || fixture.start_time || '');
+            scoreHome = fixture.score ? fixture.score.home : null;
+            scoreAway = fixture.score ? fixture.score.away : null;
+            id = fixture.id || fixture.match_id || fixture.matchId || Date.now();
+        } else if (fixture.teams && fixture.teams.home) {
+            // API-Football format
+            homeTeam = fixture.teams.home.name;
+            awayTeam = fixture.teams.away.name;
+            homeFlag = fixture.teams.home.logo || COUNTRY_FLAGS[homeTeam] || '🏳️';
+            awayFlag = fixture.teams.away.logo || COUNTRY_FLAGS[awayTeam] || '🏳️';
+            matchDate = new Date(fixture.fixture ? fixture.fixture.date : fixture.date || '');
+            scoreHome = fixture.goals ? fixture.goals.home : null;
+            scoreAway = fixture.goals ? fixture.goals.away : null;
+            id = fixture.id || (fixture.fixture ? fixture.fixture.id : Date.now());
+        } else {
+            // Simple/fallback format
+            homeTeam = fixture.team1 || fixture.home || fixture.home_team || 'TBD';
+            awayTeam = fixture.team2 || fixture.away || fixture.away_team || 'TBD';
+            homeFlag = fixture.team1Flag || COUNTRY_FLAGS[homeTeam] || '🏳️';
+            awayFlag = fixture.team2Flag || COUNTRY_FLAGS[awayTeam] || '🏳️';
+            matchDate = new Date(fixture.date || fixture.matchDate || fixture.start_time || '');
+            scoreHome = fixture.scoreHome !== undefined ? fixture.scoreHome : (fixture.score ? fixture.score.home : null);
+            scoreAway = fixture.scoreAway !== undefined ? fixture.scoreAway : (fixture.score ? fixture.score.away : null);
+            id = fixture.id || Date.now();
+        }
 
         return {
-            id: fixture.id || (fixture.fixture ? fixture.fixture.id : Date.now()),
+            id: id,
             team1: homeTeam,
             team2: awayTeam,
-            team1Flag: homeFlag || (COUNTRY_FLAGS[homeTeam] || '🏳️'),
-            team2Flag: awayFlag || (COUNTRY_FLAGS[awayTeam] || '🏳️'),
+            team1Flag: homeFlag,
+            team2Flag: awayFlag,
             startDate: matchDate,
             endDate: new Date(matchDate.getTime() + MATCH_DURATION_HOURS * 60 * 60 * 1000),
             scoreHome: scoreHome,
@@ -210,7 +275,7 @@ const DataStore = (function() {
         var now = new Date();
 
         return fixturesData.map(function(f) {
-            var matchDate = f.startDate instanceof Date ? f.startDate : new Date(f.date || f.startDate);
+            var matchDate = f.startDate instanceof Date ? f.startDate : new Date(f.date || f.startDate || f.matchDate || '');
             var matchEnd = new Date(matchDate.getTime() + MATCH_DURATION_HOURS * 60 * 60 * 1000);
 
             var embedUrl = f.embedUrl;
@@ -283,23 +348,19 @@ const DataStore = (function() {
         localStorage.removeItem(OVERRIDE_KEY);
     }
 
-    // ---- Refresh from API (silent - never shows errors) ----
+    // ---- Refresh from API ----
     function refreshFromAPI(callback) {
         fetchFromAPI()
             .then(function(fixtures) {
-                if (fixtures && fixtures.length > 0) {
-                    var parsed = fixtures.map(parseFixture);
-                    saveCache(parsed);
-                    try { document.dispatchEvent(new CustomEvent('matchesUpdated')); } catch(e) {}
-                    if (callback) callback(null, parsed);
-                } else {
-                    saveCache(FALLBACK_FIXTURES);
-                    if (callback) callback(null, FALLBACK_FIXTURES);
-                }
+                var parsed = fixtures.map(parseFixture);
+                saveCache(parsed);
+                try { document.dispatchEvent(new CustomEvent('matchesUpdated')); } catch(e) {}
+                callback(null, { source: 'api', count: parsed.length, data: parsed });
             })
-            .catch(function() {
+            .catch(function(err) {
+                console.warn('All API methods failed:', err.message);
                 saveCache(FALLBACK_FIXTURES);
-                if (callback) callback(null, FALLBACK_FIXTURES);
+                callback(null, { source: 'fallback', count: FALLBACK_FIXTURES.length, data: FALLBACK_FIXTURES, reason: err.message });
             });
     }
 
