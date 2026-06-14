@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- ============================================================
+    SPORTSTREAM – World Cup Live Streaming Platform
+    Author : Front‑End Web Developer
+    Description : Single‑page viewer for World Cup matches with
+                  dynamic match data managed via admin dashboard.
+    ============================================================ -->
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SPORTSTREAM – World Cup Live</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+    <!-- ============================================================
+    HEADER – Logo + Navigation
+    ============================================================ -->
+    <header class="header">
+        <!-- LOGO -->
+        <!-- REPLACE WITH YOUR LOGO IMAGE OR TEXT -->
+        <div class="logo">
+            <span class="logo-icon">🏆</span>
+            SPORTSTREAM
+        </div>
+        <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
+            <i class="fas fa-bars"></i>
+        </button>
+        <nav>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="#hero" class="active">Home</a></li>
+                <li><a href="#video">Live Now</a></li>
+                <li><a href="#schedule">Matches</a></li>
+                <li><a href="#highlights">Highlights</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="container">
+
+        <!-- ============================================================
+        HERO SECTION – Featured World Cup Match
+        ============================================================ -->
+        <section class="hero" id="hero">
+            <span class="hero-badge"><i class="fas fa-trophy"></i> FIFA World Cup 2026</span>
+            <h1 id="heroMatchTitle">🌍 World Cup Live</h1>
+            <p id="heroMatchDesc">Watch every match live, free. The biggest tournament on earth.</p>
+            <a href="#video" class="btn"><i class="fas fa-play"></i> Watch Live</a>
+        </section>
+
+        <!-- ============================================================
+        AD SLOT 1 – Top banner
+        ============================================================ -->
+        <div class="ad-slot"><i class="fas fa-ad"></i> &nbsp;Advertisement Slot 1 — Paste your ad code here</div>
+
+        <!-- ============================================================
+        VIDEO PLAYER AREA (iframe + Live controls + info bar)
+        ============================================================ -->
+        <section class="video-section" id="video">
+            <div class="section-header">
+                <h2 class="section-title" style="border-left:none; padding-left:0; margin-bottom:0;">
+                    <i class="fas fa-tv"></i> Live Stream
+                </h2>
+                <div class="video-controls">
+                    <span class="live-indicator">
+                        <span class="live-dot"></span>
+                        LIVE
+                    </span>
+                    <button class="fs-btn" id="fullscreenBtn">
+                        <i class="fas fa-expand"></i> Fullscreen
+                    </button>
+                </div>
+            </div>
+
+            <!-- Responsive 16:9 iframe wrapper -->
+            <div class="video-wrapper" id="videoWrapper">
+                <!-- PASTE YOUR EMBED LINK (iframe src) BELOW -->
+                <iframe
+                id="mainIframe"
+                src="https://junkieembeds.pages.dev/embed/fox-usa"
+                title="World Cup Live Stream"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowfullscreen
+                ></iframe>
+            </div>
+
+            <!-- Stream info bar (dynamic – shows current match + viewer count) -->
+            <div class="stream-info-bar">
+                <span class="match-label" id="streamMatchLabel">
+                    <i class="fas fa-futbol"></i> Loading...
+                </span>
+                <span class="viewer-count">
+                    <i class="fas fa-eye"></i> <span id="viewerCount">1,247</span> watching
+                </span>
+            </div>
+
+        </section>
+
+        <!-- ============================================================
+        AD SLOT 2 – Mid-page
+        ============================================================ -->
+        <div class="ad-slot ad-slot-row">
+            <div class="ad-slot"><i class="fas fa-ad"></i> &nbsp;Advertisement Slot 2 — Paste your ad code here</div>
+            <div class="ad-slot"><i class="fas fa-ad"></i> &nbsp;Advertisement Slot 3 — Paste your ad code here</div>
+        </div>
+
+        <!-- ============================================================
+        NEXT 5 MATCHES  (dynamically rendered from DataStore)
+        ============================================================ -->
+        <section id="schedule">
+            <h2 class="section-title"><i class="far fa-calendar-alt"></i> Next 5 Matches</h2>
+            <div class="matches-grid" id="matchesContainer">
+                <!-- Cards rendered by JavaScript -->
+            </div>
+        </section>
+
+        <!-- ============================================================
+        AD SLOT 3 – Bottom
+        ============================================================ -->
+        <div class="ad-slot"><i class="fas fa-ad"></i> &nbsp;Advertisement Slot 4 — Paste your ad code here</div>
+
+        <!-- ============================================================
+        HIGHLIGHTS / CHAT PLACEHOLDER
+        ============================================================ -->
+        <section id="highlights">
+            <h2 class="section-title"><i class="fas fa-comments"></i> Chat</h2>
+            <div class="chat-box" style="background:#141a2a; border:1px solid #1f2a3f; border-radius:12px; padding:1.5rem; margin:2rem 0; min-height:200px; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#5a6a8a; gap:0.8rem;">
+                <i class="fas fa-comment-dots" style="font-size:2.5rem; opacity:0.4;"></i>
+                <p style="font-size:1.1rem;">Chat (coming soon)</p>
+                <span style="color:#5a6a8a; font-size:0.85rem;">Real‑time chat will be available in a future update.</span>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ============================================================
+    FOOTER – Links + Donation Placeholder + Admin Link
+    ============================================================ -->
+    <footer class="footer">
+        <div class="footer-grid">
+
+            <!-- Brand -->
+            <div>
+                <!-- REPLACE WITH YOUR LOGO IMAGE OR TEXT -->
+                <div class="logo" style="font-size:1.4rem; margin-bottom:0.8rem;">
+                    <span class="logo-icon">🏆</span> SPORTSTREAM
+                </div>
+                <p>Free World Cup live streaming for everyone. Never miss a match.</p>
+            </div>
+
+            <!-- Quick Links -->
+            <div>
+                <h4>Quick Links</h4>
+                <ul class="footer-links">
+                    <li><a href="#hero">Home</a></li>
+                    <li><a href="#video">Live Now</a></li>
+                    <li><a href="#schedule">Matches</a></li>
+                    <li><a href="#">Privacy Policy</a></li>
+                    <li><a href="#">Terms of Service</a></li>
+                </ul>
+            </div>
+
+            <!-- Donation / Support -->
+            <div>
+                <h4>Support the Stream</h4>
+                <!-- ADD YOUR DONATION LINK HERE -->
+                <div class="donation-area">
+                    <p style="margin-bottom:0.5rem;">
+                        <i class="fas fa-heart" style="color:#e43f5a;"></i>
+                        Enjoying the stream? Consider supporting!
+                    </p>
+                    <!-- Dummy "Buy me a coffee" button -->
+                    <a href="#" class="btn btn-sm" style="background:#FF813F; border:none; display:inline-flex; align-items:center; gap:0.4rem;">
+                        <i class="fas fa-mug-hot"></i> Buy me a coffee
+                    </a>
+                    <!-- Crypto wallet placeholder -->
+                    <p style="margin-top:0.8rem; font-size:0.8rem; color:#5a6a8a;">
+                        <i class="fab fa-bitcoin"></i> BTC:
+                    </p>
+                    <span class="crypto-address">1226389679</span>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="footer-bottom">
+            &copy; 2026 SPORTSTREAM. All rights reserved. &mdash;
+            Built with <i class="fas fa-heart" style="color:#e43f5a;"></i> for football fans.
+            <br />
+            <a href="admin/index.html" class="admin-link" target="_blank"><i class="fas fa-cog"></i> Admin Dashboard</a>
+        </div>
+    </footer>
+
+    <!-- ============================================================
+    SCRIPTS – Data layer first, then app logic
+    ============================================================ -->
+    <script src="js/data.js"></script>
+    <script src="js/app.js"></script>
+
+</body>
+</html>

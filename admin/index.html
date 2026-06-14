@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- ============================================================
+    ADMIN DASHBOARD – SportStream World Cup Match Manager
+    Manage all 5 match slots: team names, flags, times, embed URLs,
+    and set which match is LIVE on the main viewer.
+    ============================================================ -->
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin – SportStream World Cup</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <link rel="stylesheet" href="css/admin.css" />
+</head>
+<body>
+
+    <!-- ============================================================
+    LOGIN OVERLAY – Password protected
+    ============================================================ -->
+    <div class="login-overlay" id="loginOverlay">
+        <div class="login-box">
+            <div class="lock-icon"><i class="fas fa-lock"></i></div>
+            <h2>Admin Access</h2>
+            <p>Enter the admin password to manage matches.</p>
+            <div class="form-group">
+                <label for="passwordInput">Password</label>
+                <input type="password" id="passwordInput" placeholder="Enter password" />
+            </div>
+            <div class="login-error" id="loginError"></div>
+            <button class="btn btn-primary" id="loginBtn"><i class="fas fa-unlock"></i> Unlock</button>
+            
+        </div>
+    </div>
+
+    <!-- ============================================================
+    ADMIN HEADER
+    ============================================================ -->
+    <header class="admin-header">
+        <div class="logo">
+            <span class="logo-icon">🏆</span>
+            SPORTSTREAM
+            <span class="admin-badge">Admin</span>
+        </div>
+        <a href="../index.html" class="back-link" target="_blank">
+            <i class="fas fa-external-link-alt"></i> View Live Site
+        </a>
+    </header>
+
+    <!-- ============================================================
+    ADMIN MAIN CONTENT
+    ============================================================ -->
+    <main class="admin-container">
+
+        <h1 class="page-title"><i class="fas fa-link"></i> Stream Link Manager</h1>
+        <p class="page-subtitle">
+            Only update the <strong>Embed URLs</strong> (stream links) for each match.
+            The schedule, team names, and live status are <strong>auto-managed</strong> based on your system clock.
+            Changes appear instantly on the <a href="../index.html" target="_blank" style="color:#e43f5a;">main viewer</a>.
+        </p>
+
+        <!-- Info banner -->
+        <div class="info-banner">
+            <i class="fas fa-info-circle"></i>
+            <span>
+                <strong>How it works:</strong> Match data is fetched live from <strong>API-Football</strong>
+                (World Cup 2026 fixtures). You only need to paste the <strong>Embed URL</strong> (stream link)
+                for each match. Click <strong>"Save All Changes"</strong> to persist. Times shown in your local timezone.
+            </span>
+        </div>
+
+        <!-- API Cache info -->
+        <div style="background:#1a2238; border:1px solid #2a3550; border-radius:12px; padding:1rem 1.5rem; margin-bottom:1.5rem; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.8rem;">
+            <span id="cacheInfo" style="color:#b0b8d1; font-size:0.9rem;">
+                <i class="fas fa-database"></i> Loading cache info...
+            </span>
+            <button class="btn btn-sm btn-secondary" id="refreshBtn">
+                <i class="fas fa-sync-alt"></i> Refresh from API
+            </button>
+        </div>
+
+        <!-- ============================================================
+        MATCH EDITOR CARDS (rendered by admin.js)
+        ============================================================ -->
+        <div id="matchEditorGrid" class="match-editor-grid">
+            <!-- Editor cards injected by JavaScript -->
+        </div>
+
+        <!-- ============================================================
+        SAVE / RESET CONTROLS
+        ============================================================ -->
+        <div class="save-all-section">
+            <span class="save-info">
+                <i class="fas fa-database"></i>
+                Embed URLs saved in localStorage.
+                Refresh the <a href="../index.html" target="_blank" style="color:#e43f5a;">viewer page</a> to see updates.
+            </span>
+            <div style="display:flex; gap:0.8rem; flex-wrap:wrap;">
+                <button class="btn btn-secondary" id="resetBtn">
+                    <i class="fas fa-undo"></i> Reset to Defaults
+                </button>
+                <button class="btn btn-success" id="saveAllBtn">
+                    <i class="fas fa-save"></i> Save All Changes
+                </button>
+            </div>
+        </div>
+
+        <!-- ============================================================
+        ADMIN FOOTER
+        ============================================================ -->
+        <div class="admin-footer">
+            <i class="fas fa-futbol"></i> SportStream Admin &mdash;
+            Changes are local to this browser (no server required).
+        </div>
+
+    </main>
+
+    <!-- Toast notification -->
+    <div id="toast" class="toast"></div>
+
+    <!-- ============================================================
+    SCRIPTS
+    ============================================================ -->
+    <script src="../js/data.js"></script>
+    <script src="js/admin.js"></script>
+
+</body>
+</html>

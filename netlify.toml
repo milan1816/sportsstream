@@ -1,0 +1,16 @@
+# ============================================================
+# Netlify Configuration
+# ============================================================
+
+[build]
+  # Netlify functions directory
+  functions = "netlify/functions"
+
+  # Root directory for static files
+  publish = "."
+
+# Redirect static file requests to their paths
+[[redirects]]
+  from = "/.netlify/functions/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
